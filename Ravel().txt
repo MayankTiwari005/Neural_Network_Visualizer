@@ -1,0 +1,104 @@
+Ravel()
+
+Converts 2d planner used for plotting to 1d vectors for predictions, as machine can predict on the basis of points not on plot
+
+Your training data X is 2D (each point = [x, y])
+Example:
+
+X = [[1, 10],
+     [2, 10],
+     [1, 20],
+     [2, 20]]
+
+This is what your model trains on.
+
+Step 1: You want to visualize the model’s decision regions
+
+That means you need to cover every possible (x, y) in the plot area —
+like painting the entire plane, not just 4 points.
+
+So you first create ranges of possible x and y values:
+
+x_vals = np.linspace(x_min, x_max)
+y_vals = np.linspace(y_min, y_max)
+
+
+Both of these are 1D arrays, e.g.
+
+x_vals = [1, 2, 3, 4, ...]
+y_vals = [10, 20, 30, 40, ...]
+
+-----------------------------------------------------------
+Step 2: You need to make a 2D grid of all coordinate pairs
+
+That’s where:
+
+X_plane, Y_plane = np.meshgrid(x_vals, y_vals)
+
+Every combination of x and y to cover the entire plane:
+
+(1,10), (2,10), (3,10) ...
+(1,20), (2,20), (3,20) ...
+...
+
+
+That is a 2D structure, which represents the layout of the plane.
+
+Now you can plot it: But your model can’t predict on it yet — because the classifier expects list of points, not 2D matrices.
+
+Step 3: You “flatten” the grid to send it to the model
+
+The model expects:
+
+[[x1, y1],
+ [x2, y2],
+ [x3, y3],
+  ...]
+
+
+So, must flatten those grids (2D to 1D):
+
+X_plane.ravel() → [1, 2, 3, 1, 2, 3, ...]
+Y_plane.ravel() → [10, 10, 10, 20, 20, 20, ...]
+
+
+Then combine them:
+
+grid_points = np.column_stack((X_plane.ravel(), Y_plane.ravel()))
+
+
+Now you have a list of all coordinates:
+
+[[1,10], [2,10], [3,10],
+ [1,20], [2,20], [3,20], ...]
+
+
+This is fine for prediction (clf.predict()).
+
+Step 5: After prediction, reshape back to 2D for visualization
+
+The predictions Z come back as a long 1D list (one value per point).
+To plot the colored regions, you need to put them back into the grid form matching X_plane shape.
+
+So you do:
+
+Z = Z.reshape(X_plane.shape)
+
+
+Now you can color each region on the plot.
+
+⚙️ So in short:
+Stage	Data Shape	Purpose
+x_vals, y_vals	1D	just ranges of values
+meshgrid() → X_plane, Y_plane	2D	creates coordinate grid for plotting
+.ravel() + column_stack()	1D → 2D (list of points)	prepare input for predict()
+reshape()	back to 2D	plot the predicted surface
+🧠 Analogy (visual idea)
+
+Imagine you’re painting a map 🎨
+
+Step	What you’re doing
+1️⃣ Make two rulers — one for X and one for Y	linspace()
+2️⃣ Draw the full grid on paper	meshgrid()
+3️⃣ Pick up each square one by one to ask model “What color?”	.ravel() + column_stack()
+4️⃣ Get color answers and place them back onto the paper	reshape()
